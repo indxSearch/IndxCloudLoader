@@ -1,0 +1,13 @@
+# Environment files
+.env.local
+.env
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
