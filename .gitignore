@@ -14,3 +14,6 @@ obj/
 
 # macOS files
 .DS_Store
+
+# IDE files
+.vscode/
