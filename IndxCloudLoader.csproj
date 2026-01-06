@@ -5,6 +5,26 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
+
+    <!-- Version Information -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0 - Compatible with IndxCloudApi 1.0</InformationalVersion>
+
+    <!-- Project Metadata -->
+    <Authors>Indx</Authors>
+    <Company>Bionic</Company>
+    <Product>IndxCloudLoader</Product>
+    <Description>Data loader tool for IndxCloudApi - Load and configure datasets with pre-configured field settings</Description>
+    <Copyright>Copyright © 2025 Indx (Bionic AS)</Copyright>
+
+    <!-- Open Source -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/bionic-as/IndxCloudLoader</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>search;indx;data-loader;dataset;json;search-engine</PackageTags>
+    <PackageProjectUrl>https://github.com/bionic-as/IndxCloudLoader</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -17,11 +37,7 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="6.0.5" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="System.ServiceModel.Syndication" Version="9.0.10" />
   </ItemGroup>
 
 </Project>

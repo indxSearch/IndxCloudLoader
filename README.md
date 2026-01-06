@@ -1,11 +1,17 @@
 # IndxCloudLoader
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/bionic-as/IndxCloudLoader/releases)
+
+**Version 1.0** - Compatible with IndxCloudApi 1.0 (IndxSearchLib 4.1)
+
 A C# console application for loading and configuring datasets in **IndxCloudApi**, the search server. This helper tool streamlines the process of importing data, configuring search fields, and setting up filters for optimal search performance.
 
 ## Related Projects
 
-- **[IndxCloudApi](https://github.com/yourusername/IndxCloudApi)** - The search server API that this loader connects to
-- **[indx-interface](https://github.com/yourusername/indx-interface)** - React UI for interacting with the search server
+- **[IndxCloudApi](https://github.com/bionic-as/IndxCloudApi)** - The search server API that this loader connects to
+- **[indx-interface](https://github.com/bionic-as/indx-interface)** - React UI for interacting with the search server
 
 ## Features
 
@@ -15,6 +21,27 @@ A C# console application for loading and configuring datasets in **IndxCloudApi*
 - Field weight configuration for search relevance
 - Real-time status monitoring during import
 - Example search queries to verify data loading
+
+## Project Structure
+
+```
+IndxCloudLoader/
+├── Program.cs              # Entry point with CLI args and interactive menu
+├── LoadAPI.cs              # Main data loading logic with API calls
+├── DatasetConfig.cs        # Dataset configurations (tmdb, pokedex)
+├── ApiModels.cs            # API data contracts (DTOs for JSON serialization)
+├── ConsoleHelper.cs        # Console output formatting utilities
+├── Login.cs                # Authentication helpers
+├── .env.local.example      # Environment configuration template
+└── data/                   # Dataset JSON files
+    ├── tmdb_top10k.json
+    └── pokedex.json
+```
+
+**Key Files:**
+- **ApiModels.cs** - Contains all the data transfer objects (DTOs) that match IndxCloudApi's JSON contracts. These are required for C# to serialize/deserialize API requests and responses.
+- **DatasetConfig.cs** - Add new datasets here by defining searchable, filterable, facetable, and sortable fields.
+- **LoadAPI.cs** - The main workflow with comprehensive inline comments explaining each step.
 
 ## Included Datasets
 
@@ -55,7 +82,7 @@ Also includes a Pokemon dataset with searchable, filterable, and sortable fields
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/IndxCloudLoader.git
+   git clone https://github.com/bionic-as/IndxCloudLoader.git
    cd IndxCloudLoader
    ```
 
@@ -286,8 +313,11 @@ Example:
 
 ## License
 
-[Your License Here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to:
+- Report bugs or request features via [GitHub Issues](https://github.com/bionic-as/IndxCloudLoader/issues)
+- Submit Pull Requests with improvements
+- Share feedback and suggestions
