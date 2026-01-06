@@ -1,4 +1,4 @@
-using IndxCloudLoader.Models;
+using Indx.Api;
 
 namespace IndxCloudLoader
 {
