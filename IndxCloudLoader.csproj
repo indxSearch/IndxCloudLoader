@@ -21,10 +21,10 @@
 
     <!-- Open Source -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/bionic-as/IndxCloudLoader</RepositoryUrl>
+    <RepositoryUrl>https://github.com/indxSearch/IndxCloudLoader</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>search;indx;data-loader;dataset;json;search-engine</PackageTags>
-    <PackageProjectUrl>https://github.com/bionic-as/IndxCloudLoader</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/indxSearch/IndxCloudLoader</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

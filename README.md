@@ -2,16 +2,16 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/bionic-as/IndxCloudLoader/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/indxSearch/IndxCloudLoader/releases)
 
-**Version 1.0** - Compatible with IndxCloudApi 1.0 (IndxSearchLib 4.1)
+**Version 1.0** - Compatible with IndxCloudApi 1.0
 
 A C# console application for loading and configuring datasets in **IndxCloudApi**, the search server. This helper tool streamlines the process of importing data, configuring search fields, and setting up filters for optimal search performance.
 
 ## Related Projects
 
-- **[IndxCloudApi](https://github.com/bionic-as/IndxCloudApi)** - The search server API that this loader connects to
-- **[indx-interface](https://github.com/bionic-as/indx-interface)** - React UI for interacting with the search server
+- **[IndxCloudApi](https://github.com/indxSearch/IndxCloudApi)** - The search server API that this loader connects to
+- **[indx-interface](https://github.com/indxSearch/indx-interface)** - React UI for interacting with the search server
 
 ## Features
 
@@ -47,30 +47,11 @@ IndxCloudLoader/
 
 ### TMDB Top 10,000 Movies
 
-The project includes a pre-configured dataset of 10,000 top movies from The Movie Database (TMDB) with the following field configuration:
-
-**Searchable Fields:**
-- `title` (High weight)
-- `original_title` (Medium weight)
-- `description` (Medium weight)
-- `actors` (Low weight)
-
-**Filterable & Facetable Fields:**
-- `release_year`
-- `vote_average`
-- `vote_count_tier`
-- `genres`
-- `decade`
-- `actors`
-- `language`
-
-**Sortable Fields:**
-- `popularity`
-- `vote_average`
+The project includes a pre-configured dataset of 10,000 top movies from The Movie Database (TMDB). Data sourced from [TMDB](https://www.themoviedb.org/).
 
 ### Pokedex Dataset
 
-Also includes a Pokemon dataset with searchable, filterable, and sortable fields configured for quick testing.
+Includes a Pokemon dataset for testing purposes. Pokemon data is property of Nintendo/Game Freak.
 
 ## Prerequisites
 
@@ -82,7 +63,7 @@ Also includes a Pokemon dataset with searchable, filterable, and sortable fields
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/bionic-as/IndxCloudLoader.git
+   git clone https://github.com/indxSearch/IndxCloudLoader.git
    cd IndxCloudLoader
    ```
 
@@ -318,6 +299,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contributing
 
 Contributions are welcome! Please feel free to:
-- Report bugs or request features via [GitHub Issues](https://github.com/bionic-as/IndxCloudLoader/issues)
+- Report bugs or request features via [GitHub Issues](https://github.com/indxSearch/IndxCloudLoader/issues)
 - Submit Pull Requests with improvements
 - Share feedback and suggestions
