@@ -4,7 +4,7 @@
 [![.NET](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/indxSearch/IndxCloudLoader/releases)
 
-**Version 1.0** - Compatible with IndxCloudApi 1.0
+**Version 1.0** - Compatible with IndxCloudApi 1.0 (IndxSearchLib 4.1)
 
 A C# console application for loading and configuring datasets in **IndxCloudApi**, the search server. This helper tool streamlines the process of importing data, configuring search fields, and setting up filters for optimal search performance.
 
@@ -29,7 +29,6 @@ IndxCloudLoader/
 ├── Program.cs              # Entry point with CLI args and interactive menu
 ├── LoadAPI.cs              # Main data loading logic with API calls
 ├── DatasetConfig.cs        # Dataset configurations (tmdb, pokedex)
-├── ApiModels.cs            # API data contracts (DTOs for JSON serialization)
 ├── ConsoleHelper.cs        # Console output formatting utilities
 ├── Login.cs                # Authentication helpers
 ├── .env.local.example      # Environment configuration template
@@ -39,7 +38,6 @@ IndxCloudLoader/
 ```
 
 **Key Files:**
-- **ApiModels.cs** - Contains all the data transfer objects (DTOs) that match IndxCloudApi's JSON contracts. These are required for C# to serialize/deserialize API requests and responses.
 - **DatasetConfig.cs** - Add new datasets here by defining searchable, filterable, facetable, and sortable fields.
 - **LoadAPI.cs** - The main workflow with comprehensive inline comments explaining each step.
 
