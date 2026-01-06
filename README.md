@@ -146,87 +146,10 @@ The loader will:
 8. ✓ Run a test search query
 9. ✓ Display a summary with statistics
 
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `API_URI` | URL of your IndxCloudApi instance | `https://localhost:5001` |
-| `BEARER_TOKEN` | JWT authentication token (recommended) | - |
-| `USER_EMAIL` | Your IndxCloudApi account email (alternative auth) | - |
-| `USER_PASSWORD` | Your IndxCloudApi account password (alternative auth) | - |
-
-## Example Output
-
-Here's what a successful execution looks like:
-
-```
-━━━ Loading Dataset: pokedex ━━━
-  Data file: data/pokedex.json
-  File size: 0 MB
-
-  Creating or opening dataset...
-✓ Dataset opened successfully
-  Analyzing data structure...
-✓ Data structure analyzed
-  Discovering fields in dataset...
-✓ Found 13 fields
-  Fields: pokedex_number, name, generation, type1, type2, hp, attack, defense, sp_attack, sp_defense, speed, is_legendary, total_stats
-
-  Configuring searchable fields...
-✓ Configured 3 searchable fields
-    - name (weight: 100)
-    - type1 (weight: 50)
-    - type2 (weight: 25)
-  Configuring filterable fields...
-✓ Configured 6 filterable fields
-  Configuring facetable fields...
-✓ Configured 6 facetable fields
-  Configuring sortable fields...
-✓ Configured 2 sortable fields
-
-  Verifying field configuration...
-✓ Field configuration verified
-
-━━━ Loading Data ━━━
-  Streaming data from data/pokedex.json...
-✓ Data loaded in 2.3 seconds
-  Total records: 801
-
-━━━ Building Search Index ━━━
-  Indexing dataset (this may take a moment)...
-✓ Index built in 1.5 seconds
-
-━━━ Running Test Search ━━━
-  Search query: "raic"
-✓ Found 5 results
-
-Result 1:
-  Score: 12.45
-  Document Key: 384
-  Data: {"pokedex_number":384,"name":"Rayquaza",...}
-
-━━━ Dataset Load Complete ━━━
-  Dataset: pokedex
-  Total Records: 801
-  Searchable Fields: 3
-  Filterable Fields: 6
-  Facetable Fields: 6
-  Sortable Fields: 2
-  Loading Time: 2.3s
-  Indexing Time: 1.5s
-  Test Query Results: 5
-
-✓ Dataset is ready for use!
-
-Press Enter to exit...
-```
-
 ## API Endpoints
 
 The loader interacts with the following IndxCloudApi endpoints:
-- `/api/CreateOrOpen/{dataSetName}/{configuration}` - Initialize dataset
+- `/api/CreateOrOpen/{dataSetName}/{configuration}` - Initialize dataset session
 - `/api/AnalyzeString/{dataSetName}` - Analyze data structure
 - `/api/SetSearchableFields/{dataSetName}` - Configure searchable fields
 - `/api/SetFilterableFields/{dataSetName}` - Configure filterable fields
@@ -295,10 +218,3 @@ Example:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to:
-- Report bugs or request features via [GitHub Issues](https://github.com/indxSearch/IndxCloudLoader/issues)
-- Submit Pull Requests with improvements
-- Share feedback and suggestions
