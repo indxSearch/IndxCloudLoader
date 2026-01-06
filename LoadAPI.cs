@@ -1,5 +1,4 @@
-﻿using Indx.Api;
-using Indx.CloudApi;
+﻿using IndxCloudLoader.Models;
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
@@ -13,9 +12,6 @@ namespace IndxCloudLoader
         #region Private Fields
 
         private const string SearchControllerRoute = "api";
-
-        // Choose your dataset here
-        private const string dataset = "pokedex"; // Options: "pokedex", "tmdb"
 
         #endregion Private Fields
 
@@ -432,102 +428,161 @@ namespace IndxCloudLoader
             return res.IsSuccessStatusCode;
         }
 
-        private static async Task LoadDataset()
+        /// <summary>
+        /// Loads and configures a dataset in the IndxCloudApi search server.
+        ///
+        /// Process Overview:
+        /// 1. Validation - Check file existence and API connectivity
+        /// 2. Create/Open Dataset - Initialize or open existing dataset
+        /// 3. Analyze Data - Parse JSON structure and identify fields
+        /// 4. Configure Fields - Set searchable, filterable, facetable, and sortable properties
+        /// 5. Load Data - Stream JSON data to the search server
+        /// 6. Index Dataset - Build search indexes for fast querying
+        /// 7. Test Search - Verify dataset with a sample query
+        ///
+        /// Field Types Explained:
+        /// - Searchable: Fields that can be queried with full-text search (e.g., title, description)
+        /// - Filterable: Fields that can be used to filter results (e.g., genre, year)
+        /// - Facetable: Fields that can be aggregated for faceted navigation (e.g., category counts)
+        /// - Sortable: Fields that can be used to sort results (e.g., popularity, date)
+        /// </summary>
+        private static async Task LoadDataset(string datasetName)
         {
-            // Dataset configuration
-            string dataSetName;
-            string file;
-            (string Name, int Weight)[] searchableFields;
-            string[] filterableFields;
-            string[] facetableFields;
-            string[] sortableFields;
-
-            if (dataset == "tmdb")
+            // ━━━ Step 0: Load and Validate Configuration ━━━
+            var config = DatasetConfig.GetConfig(datasetName);
+            if (config == null)
             {
-                dataSetName = "tmdb";
-                file = "data/tmdb_top10k.json";
-                searchableFields = new[]
-                {
-                    ("title", (int)Weight.High),
-                    ("original_title", (int)Weight.Med),
-                    ("description", (int)Weight.Med),
-                    ("actors", (int)Weight.Low)
-                };
-                filterableFields = new[] { "release_year", "vote_average", "vote_count_tier", "genres", "decade", "actors", "language" };
-                facetableFields = new[] { "release_year", "vote_average", "vote_count_tier", "genres", "decade", "actors", "language" };
-                sortableFields = new[] { "popularity", "vote_average" };
-            }
-            else if (dataset == "pokedex")
-            {
-                dataSetName = "pokedex";
-                file = "data/pokedex.json";
-                searchableFields = new[]
-                {
-                    ("name", (int)Weight.High),
-                    ("type1", (int)Weight.Med),
-                    ("type2", (int)Weight.Low)
-                };
-                filterableFields = new[] { "speed", "attack", "hp", "type1", "type2", "is_legendary" };
-                facetableFields = new[] { "speed", "attack", "hp", "type1", "type2", "is_legendary" };
-                sortableFields = new[] { "name", "speed" };
-            }
-            else
-            {
-                Console.WriteLine($"Unknown dataset: {dataset}");
+                ConsoleHelper.WriteError($"Unknown dataset: {datasetName}");
+                ConsoleHelper.WriteInfo($"Available datasets: {string.Join(", ", DatasetConfig.GetAvailableDatasets())}");
                 return;
             }
 
+            // Validate data file exists
+            if (!File.Exists(config.FilePath))
+            {
+                ConsoleHelper.WriteError($"Data file not found: {config.FilePath}");
+                ConsoleHelper.WriteInfo("Please ensure the data file exists in the correct location.");
+                ConsoleHelper.WriteInfo($"Expected path: {Path.GetFullPath(config.FilePath)}");
+                return;
+            }
+
+            ConsoleHelper.WriteHeader($"Loading Dataset: {config.Name}");
+            ConsoleHelper.WriteInfo($"Data file: {config.FilePath}");
+            ConsoleHelper.WriteInfo($"File size: {new FileInfo(config.FilePath).Length / 1024 / 1024} MB");
+            Console.WriteLine();
+
+            // ━━━ Step 1: Initialize HTTP Client and Authentication ━━━
             HttpClient client = new();
             if (Debugger.IsAttached)
                 client.Timeout = TimeSpan.FromMinutes(5);
             SetBearerToken(client, bearerToken);
 
-            Console.WriteLine($"Loading dataset: {dataSetName}");
+            // ━━━ Step 2: Create or Open Dataset ━━━
+            ConsoleHelper.WriteInfo("Creating or opening dataset...");
+            try
+            {
+                var createSuccess = await CreateOrOpenDataSet(SearchControllerRoute, config.Name, 400, client);
+                if (!createSuccess)
+                {
+                    ConsoleHelper.WriteError("Failed to create or open dataset.");
+                    ConsoleHelper.WriteInfo("Troubleshooting:");
+                    ConsoleHelper.WriteInfo("  1. Verify API_URI in .env.local is correct");
+                    ConsoleHelper.WriteInfo("  2. Ensure IndxCloudApi is running");
+                    ConsoleHelper.WriteInfo("  3. Check that BEARER_TOKEN is valid (not expired)");
+                    return;
+                }
+                ConsoleHelper.WriteSuccess("Dataset opened successfully");
+            }
+            catch (HttpRequestException ex)
+            {
+                ConsoleHelper.WriteError($"Network error: {ex.Message}");
+                ConsoleHelper.WriteInfo("Troubleshooting:");
+                ConsoleHelper.WriteInfo($"  - Cannot connect to: {uri}");
+                ConsoleHelper.WriteInfo("  - Is IndxCloudApi running?");
+                ConsoleHelper.WriteInfo("  - Check your firewall settings");
+                return;
+            }
 
-            //var success = await DeleteDataSet(SearchControllerRoute, dataSetName, client);
-            var success = await CreateOrOpenDataSet(SearchControllerRoute, dataSetName, 400, client);
-            var status1 = await GetStatus(dataSetName, client);
-            var status0 = await Analyze(dataSetName, file, client);
-            //var status0 = await AnalyzeStreamAsync(dataSetName, file, client);
+            // ━━━ Step 3: Analyze Data Structure ━━━
+            ConsoleHelper.WriteInfo("Analyzing data structure...");
+            var status0 = await Analyze(config.Name, config.FilePath, client);
+            if (status0 == null)
+            {
+                ConsoleHelper.WriteError("Failed to analyze data file");
+                return;
+            }
+            ConsoleHelper.WriteSuccess("Data structure analyzed");
 
-            status1 = await GetStatus(dataSetName, client);
+            var status1 = await GetStatus(config.Name, client);
 
-            var proceed = true;
+            // ━━━ Step 4: Discover and Display All Fields ━━━
+            ConsoleHelper.WriteInfo("Discovering fields in dataset...");
+            var list = await GetAllFields(config.Name, client);
+            ConsoleHelper.WriteSuccess($"Found {list.Length} fields");
+            ConsoleHelper.WriteInfo($"Fields: {string.Join(", ", list)}");
+            Console.WriteLine();
 
-            var list = await GetAllFields(dataSetName, client);
-            Console.WriteLine($"All fields: {string.Join(", ", list)}");
+            // ━━━ Step 5: Configure Searchable Fields ━━━
+            // Searchable fields are used for full-text search queries.
+            // Weight determines relevance (High > Med > Low) in search results.
+            ConsoleHelper.WriteInfo("Configuring searchable fields...");
+            var myres = await SetSearchableFields(config.Name, config.SearchableFields, client);
+            if (!myres)
+            {
+                ConsoleHelper.WriteError("Failed to set searchable fields");
+                return;
+            }
+            ConsoleHelper.WriteSuccess($"Configured {config.SearchableFields.Length} searchable fields");
+            foreach (var field in config.SearchableFields)
+            {
+                ConsoleHelper.WriteInfo($"  - {field.Name} (weight: {field.Weight})");
+            }
 
-            // Set searchable fields with weights
-            var myres = await SetSearchableFields(dataSetName, searchableFields, client);
-            Console.WriteLine($"SetSearchableFields result: {myres}");
+            // ━━━ Step 6: Configure Filterable Fields ━━━
+            // Filterable fields can be used in filter expressions (e.g., year > 2020).
+            ConsoleHelper.WriteInfo("Configuring filterable fields...");
+            var myres2 = await SetFilterableFields(config.Name, config.FilterableFields, client);
+            if (!myres2)
+            {
+                ConsoleHelper.WriteError("Failed to set filterable fields");
+                return;
+            }
+            ConsoleHelper.WriteSuccess($"Configured {config.FilterableFields.Length} filterable fields");
 
-            // Set filterable fields
-            var myres2 = await SetFilterableFields(dataSetName, filterableFields, client);
-            Console.WriteLine($"SetFilterableFields result: {myres2}");
+            // ━━━ Step 7: Configure Facetable Fields ━━━
+            // Facetable fields enable aggregated counts for filtering UI (e.g., Genre: Action (42)).
+            ConsoleHelper.WriteInfo("Configuring facetable fields...");
+            var facetsResult = await SetFacetableFields(config.Name, config.FacetableFields, client);
+            if (!facetsResult)
+            {
+                ConsoleHelper.WriteError("Failed to set facetable fields");
+                return;
+            }
+            ConsoleHelper.WriteSuccess($"Configured {config.FacetableFields.Length} facetable fields");
 
-            // Set facetable fields
-            var facetsResult = await SetFacetableFields(dataSetName, facetableFields, client);
-            Console.WriteLine($"SetFacetableFields result: {facetsResult}");
+            // ━━━ Step 8: Configure Sortable Fields ━━━
+            // Sortable fields allow results to be ordered (e.g., sort by popularity desc).
+            ConsoleHelper.WriteInfo("Configuring sortable fields...");
+            var sortres = await SetSortableFields(config.Name, config.SortableFields, client);
+            if (!sortres)
+            {
+                ConsoleHelper.WriteError("Failed to set sortable fields");
+                return;
+            }
+            ConsoleHelper.WriteSuccess($"Configured {config.SortableFields.Length} sortable fields");
+            Console.WriteLine();
 
-            // Set sortable fields
-            var sortres = await SetSortableFields(dataSetName, sortableFields, client);
-            Console.WriteLine($"SetSortableFields result: {sortres}");
-
-            // Verify field configuration
-            var ifields = await GetSearchableFields(dataSetName, client);
-            Console.WriteLine($"Searchable fields: {string.Join(", ", ifields)}");
-
-            var sres = await GetSortableFields(dataSetName, client);
-            Console.WriteLine($"Sortable fields: {string.Join(", ", sres)}");
-
-            var sres2 = await GetFacetableFields(dataSetName, client);
-            Console.WriteLine($"Facetable fields: {string.Join(", ", sres2)}");
-
-            var sres3 = await GetFilterableFields(dataSetName, client);
-            Console.WriteLine($"Filterable fields: {string.Join(", ", sres3)}");
+            // ━━━ Step 9: Verify Field Configuration ━━━
+            ConsoleHelper.WriteInfo("Verifying field configuration...");
+            var ifields = await GetSearchableFields(config.Name, client);
+            var sres = await GetSortableFields(config.Name, client);
+            var sres2 = await GetFacetableFields(config.Name, client);
+            var sres3 = await GetFilterableFields(config.Name, client);
+            ConsoleHelper.WriteSuccess("Field configuration verified");
+            Console.WriteLine();
 
             // Create filters (optional - dataset specific examples)
-            if (dataset == "pokedex")
+            if (config.Name == "pokedex")
             {
                 RangeFilterProxy filter = new RangeFilterProxy
                 {
@@ -536,7 +591,7 @@ namespace IndxCloudLoader
                     UpperLimit = 50.0
                 };
 
-                var filt1 = await CreateRangeFilter(dataSetName, filter, client);
+                var filt1 = await CreateRangeFilter(config.Name, filter, client);
 
                 ValueFilterProxy vf = new ValueFilterProxy
                 {
@@ -544,29 +599,44 @@ namespace IndxCloudLoader
                     Value = 50
                 };
 
-                var filt2 = await CreateValueFilter(dataSetName, vf, client);
+                var filt2 = await CreateValueFilter(config.Name, vf, client);
 
                 CombinedFilterProxy cf = new CombinedFilterProxy(filt1, filt2, true);
-                var combFilt = await CombineFilters(dataSetName, cf, client);
+                var combFilt = await CombineFilters(config.Name, cf, client);
 
                 var bp = new BoostProxy { FilterProxy = combFilt, BoostStrength = BoostStrength.High };
 
-                var boostProxy = await CreateBoost(dataSetName, bp, client);
+                var boostProxy = await CreateBoost(config.Name, bp, client);
             }
 
-            // here check if data is present in db for this dataset
+            // ━━━ Step 10: Load Data from File ━━━
+            ConsoleHelper.WriteHeader("Loading Data");
+            ConsoleHelper.WriteInfo($"Streaming data from {config.FilePath}...");
+
             var loadFromDb = false;
             bool result2;
             if (!loadFromDb)
-                result2 = await LoadStreamAsync(dataSetName, file, client);
-            // result2 = await LoadString(dataSetName, file, client);
-            proceed = true;
-            var status = await GetStatus(dataSetName, client);
+            {
+                result2 = await LoadStreamAsync(config.Name, config.FilePath, client);
+                if (!result2)
+                {
+                    ConsoleHelper.WriteError("Failed to load data");
+                    return;
+                }
+            }
+
+            // Monitor loading progress
+            var proceed = true;
+            var loadingStartTime = DateTime.Now;
+            var dotCount = 0;
+            var status = await GetStatus(config.Name, client);
 
             do
             {
-                Console.Write("*");
-                status = await GetStatus(dataSetName, client);
+                dotCount++;
+                ConsoleHelper.WriteProgress($"Loading data{new string('.', dotCount % 4)}   ");
+
+                status = await GetStatus(config.Name, client);
                 if (status != null)
                     proceed = status.SystemState == SystemState.Loading;
                 else
@@ -574,22 +644,36 @@ namespace IndxCloudLoader
                 await Task.Delay(100);
             } while (proceed);
 
-            var userDataSets = await GetUserDataSets(client);
+            Console.WriteLine(); // New line after progress
+            var loadingDuration = DateTime.Now - loadingStartTime;
+            ConsoleHelper.WriteSuccess($"Data loaded in {loadingDuration.TotalSeconds:F1} seconds");
 
-            var state = await GetStatus(dataSetName, client);
+            // Get record count
+            var numberOfRecords = await GetNumberOfJsonRecordsInDb(config.Name, client);
+            ConsoleHelper.WriteInfo($"Total records: {numberOfRecords:N0}");
+            Console.WriteLine();
 
-            var numberOfRecords = await GetNumberOfJsonRecordsInDb(dataSetName, client);
+            // ━━━ Step 11: Build Search Index ━━━
+            ConsoleHelper.WriteHeader("Building Search Index");
+            ConsoleHelper.WriteInfo("Indexing dataset (this may take a moment)...");
 
-            if (numberOfRecords > 0 && loadFromDb)
-                success = await LoadFromDatabaseAsync(dataSetName, client);
+            var success = await IndexDataSet(config.Name, client);
+            if (!success)
+            {
+                ConsoleHelper.WriteError("Failed to start indexing");
+                return;
+            }
 
-
-            success = await IndexDataSet(dataSetName, client);
+            // Monitor indexing progress
             proceed = true;
+            var indexingStartTime = DateTime.Now;
+            dotCount = 0;
             do
             {
-                Console.Write(".");
-                status = await GetStatus(dataSetName, client);
+                dotCount++;
+                ConsoleHelper.WriteProgress($"Indexing{new string('.', dotCount % 4)}   ");
+
+                status = await GetStatus(config.Name, client);
                 if (status != null)
                     proceed = status.SystemState != SystemState.Ready;
                 else
@@ -597,24 +681,63 @@ namespace IndxCloudLoader
                 await Task.Delay(100);
             } while (proceed);
 
+            Console.WriteLine(); // New line after progress
+            var indexingDuration = DateTime.Now - indexingStartTime;
+            ConsoleHelper.WriteSuccess($"Index built in {indexingDuration.TotalSeconds:F1} seconds");
+            Console.WriteLine();
+
+            // ━━━ Step 12: Run Test Search ━━━
+            ConsoleHelper.WriteHeader("Running Test Search");
+            ConsoleHelper.WriteInfo($"Search query: \"{config.TestQuery}\"");
+
             CloudQuery query = new CloudQuery
             {
-                Text = dataset == "tmdb" ? "titanic" : "raic",
+                Text = config.TestQuery,
                 MaxNumberOfRecordsToReturn = 5,
-                SortBy = dataset == "tmdb" ? "popularity" : "name"
+                SortBy = config.SortableFields.FirstOrDefault() ?? ""
             };
-            var res = await Search(query, dataSetName, client);
+
+            var res = await Search(query, config.Name, client);
             if (res == null)
             {
-                Console.WriteLine("Search returned null");
+                ConsoleHelper.WriteError("Search returned null");
                 return;
             }
+
+            var resultsCount = res.Records.Count();
+            ConsoleHelper.WriteSuccess($"Found {resultsCount} results");
+            Console.WriteLine();
+
+            // Display top results
+            int resultNum = 1;
             foreach (var item in res.Records)
             {
-                var rec = await GetJson(dataSetName, new long[] { item.DocumentKey }, client);
-                Console.WriteLine($"Key:{item.DocumentKey} Score:{item.Score}");
-                Console.WriteLine(rec[0]);
+                var rec = await GetJson(config.Name, new long[] { item.DocumentKey }, client);
+                Console.WriteLine($"Result {resultNum}:");
+                ConsoleHelper.WriteInfo($"  Score: {item.Score:F2}");
+                ConsoleHelper.WriteInfo($"  Document Key: {item.DocumentKey}");
+                ConsoleHelper.WriteInfo($"  Data: {rec[0]}");
+                Console.WriteLine();
+                resultNum++;
             }
+
+            // ━━━ Final Summary ━━━
+            ConsoleHelper.WriteSummary("Dataset Load Complete", new Dictionary<string, object>
+            {
+                { "Dataset", config.Name },
+                { "Total Records", $"{numberOfRecords:N0}" },
+                { "Searchable Fields", config.SearchableFields.Length },
+                { "Filterable Fields", config.FilterableFields.Length },
+                { "Facetable Fields", config.FacetableFields.Length },
+                { "Sortable Fields", config.SortableFields.Length },
+                { "Loading Time", $"{loadingDuration.TotalSeconds:F1}s" },
+                { "Indexing Time", $"{indexingDuration.TotalSeconds:F1}s" },
+                { "Test Query Results", resultsCount }
+            });
+
+            ConsoleHelper.WriteSuccess("Dataset is ready for use!");
+            Console.WriteLine();
+            Console.WriteLine("Press Enter to exit...");
             Console.ReadLine();
         }
 
