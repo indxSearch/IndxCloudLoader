@@ -4,7 +4,7 @@
 [![.NET](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com/)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/indxSearch/IndxCloudLoader/releases)
 
-**Version 1.0** - Compatible with IndxCloudApi 1.0 (IndxSearchLib 4.1)
+**Version 1.0** - Compatible with IndxCloudApi 1.0 (using IndxSearchLib 4.1)
 
 A C# console application for loading and configuring datasets in **IndxCloudApi**, the search server. This helper tool streamlines the process of importing data, configuring search fields, and setting up filters for optimal search performance.
 
