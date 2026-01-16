@@ -259,6 +259,27 @@ namespace IndxCloudLoader
             return new string[0];
         }
 
+        private static async Task<string[]> GetWordIndexingFields(string dataSetName, HttpClient client)
+        {
+            var respons = await client.GetAsync(SearchControllerRoute + "/GetWordIndexingFields/" + dataSetName);
+            if (respons.IsSuccessStatusCode)
+            {
+                var dataAsString = await respons.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions()
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                return JsonSerializer.Deserialize<string[]>(dataAsString, options);
+            }
+            else
+            {
+                Console.WriteLine("GetWordIndexingFields failed, type any char to exit");
+                Console.ReadKey();
+                Environment.Exit(-1);
+            }
+            return new string[0];
+        }
+
         private static async Task<int> GetNumberOfJsonRecordsInDb(string dataSetName, HttpClient client)
         {
             var response = await client.GetAsync(SearchControllerRoute + "/GetNumberOfJsonRecordsInDb/" + dataSetName);
@@ -429,6 +450,17 @@ namespace IndxCloudLoader
             return res.IsSuccessStatusCode;
         }
 
+        private static async Task<bool> SetWordIndexingFields(string dataSetName, string[] fields, HttpClient client)
+        {
+            var options = new JsonSerializerOptions
+            {
+                IncludeFields = true,
+            };
+
+            var res = await client.PutAsJsonAsync(SearchControllerRoute + "/SetWordIndexingFields/" + dataSetName, fields, options);
+            return res.IsSuccessStatusCode;
+        }
+
         /// <summary>
         /// Loads and configures a dataset in the IndxCloudApi search server.
         ///
@@ -436,13 +468,14 @@ namespace IndxCloudLoader
         /// 1. Validation - Check file existence and API connectivity
         /// 2. Create/Open Dataset - Initialize or open existing dataset
         /// 3. Analyze Data - Parse JSON structure and identify fields
-        /// 4. Configure Fields - Set searchable, filterable, facetable, and sortable properties
+        /// 4. Configure Fields - Set searchable, word indexing, filterable, facetable, and sortable properties
         /// 5. Load Data - Stream JSON data to the search server
         /// 6. Index Dataset - Build search indexes for fast querying
         /// 7. Test Search - Verify dataset with a sample query
         ///
         /// Field Types Explained:
         /// - Searchable: Fields that can be queried with full-text search (e.g., title, description)
+        /// - Word Indexing: Fields that use word-level indexing for enhanced search capabilities
         /// - Filterable: Fields that can be used to filter results (e.g., genre, year)
         /// - Facetable: Fields that can be aggregated for faceted navigation (e.g., category counts)
         /// - Sortable: Fields that can be used to sort results (e.g., popularity, date)
@@ -571,14 +604,30 @@ namespace IndxCloudLoader
                 return;
             }
             ConsoleHelper.WriteSuccess($"Configured {config.SortableFields.Length} sortable fields");
+
+            // ━━━ Step 9: Configure Word Indexing Fields ━━━
+            // Word indexing fields enable word-level indexing for specific fields.
+            ConsoleHelper.WriteInfo("Configuring word indexing fields...");
+            var wordIndexRes = await SetWordIndexingFields(config.Name, config.WordIndexingFields, client);
+            if (!wordIndexRes)
+            {
+                ConsoleHelper.WriteError("Failed to set word indexing fields");
+                return;
+            }
+            ConsoleHelper.WriteSuccess($"Configured {config.WordIndexingFields.Length} word indexing fields");
+            foreach (var field in config.WordIndexingFields)
+            {
+                ConsoleHelper.WriteInfo($"  - {field}");
+            }
             Console.WriteLine();
 
-            // ━━━ Step 9: Verify Field Configuration ━━━
+            // ━━━ Step 10: Verify Field Configuration ━━━
             ConsoleHelper.WriteInfo("Verifying field configuration...");
             var ifields = await GetSearchableFields(config.Name, client);
             var sres = await GetSortableFields(config.Name, client);
             var sres2 = await GetFacetableFields(config.Name, client);
             var sres3 = await GetFilterableFields(config.Name, client);
+            var sres4 = await GetWordIndexingFields(config.Name, client);
             ConsoleHelper.WriteSuccess("Field configuration verified");
             Console.WriteLine();
 
@@ -610,7 +659,7 @@ namespace IndxCloudLoader
                 var boostProxy = await CreateBoost(config.Name, bp, client);
             }
 
-            // ━━━ Step 10: Load Data from File ━━━
+            // ━━━ Step 11: Load Data from File ━━━
             ConsoleHelper.WriteHeader("Loading Data");
             ConsoleHelper.WriteInfo($"Streaming data from {config.FilePath}...");
 
@@ -654,7 +703,7 @@ namespace IndxCloudLoader
             ConsoleHelper.WriteInfo($"Total records: {numberOfRecords:N0}");
             Console.WriteLine();
 
-            // ━━━ Step 11: Build Search Index ━━━
+            // ━━━ Step 12: Build Search Index ━━━
             ConsoleHelper.WriteHeader("Building Search Index");
             ConsoleHelper.WriteInfo("Indexing dataset (this may take a moment)...");
 
@@ -687,7 +736,7 @@ namespace IndxCloudLoader
             ConsoleHelper.WriteSuccess($"Index built in {indexingDuration.TotalSeconds:F1} seconds");
             Console.WriteLine();
 
-            // ━━━ Step 12: Run Test Search ━━━
+            // ━━━ Step 13: Run Test Search ━━━
             ConsoleHelper.WriteHeader("Running Test Search");
             ConsoleHelper.WriteInfo($"Search query: \"{config.TestQuery}\"");
 
@@ -728,6 +777,7 @@ namespace IndxCloudLoader
                 { "Dataset", config.Name },
                 { "Total Records", $"{numberOfRecords:N0}" },
                 { "Searchable Fields", config.SearchableFields.Length },
+                { "Word Indexing Fields", config.WordIndexingFields.Length },
                 { "Filterable Fields", config.FilterableFields.Length },
                 { "Facetable Fields", config.FacetableFields.Length },
                 { "Sortable Fields", config.SortableFields.Length },

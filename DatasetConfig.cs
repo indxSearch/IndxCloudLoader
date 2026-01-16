@@ -7,6 +7,7 @@ namespace IndxCloudLoader
         public string Name { get; set; }
         public string FilePath { get; set; }
         public (string Name, int Weight)[] SearchableFields { get; set; }
+        public string[] WordIndexingFields { get; set; }
         public string[] FilterableFields { get; set; }
         public string[] FacetableFields { get; set; }
         public string[] SortableFields { get; set; }
@@ -27,6 +28,7 @@ namespace IndxCloudLoader
                         ("description", (int)Weight.Med),
                         ("actors", (int)Weight.Low)
                     },
+                    WordIndexingFields = new[] { "title" },
                     FilterableFields = new[] { "release_year", "vote_average", "vote_count_tier", "genres", "decade", "actors", "language" },
                     FacetableFields = new[] { "release_year", "vote_average", "vote_count_tier", "genres", "decade", "actors", "language" },
                     SortableFields = new[] { "popularity", "vote_average" },
@@ -42,6 +44,7 @@ namespace IndxCloudLoader
                         ("type1", (int)Weight.Med),
                         ("type2", (int)Weight.Low)
                     },
+                    WordIndexingFields = new[] { "name", "type1", "type2" },
                     FilterableFields = new[] { "speed", "attack", "hp", "type1", "type2", "is_legendary" },
                     FacetableFields = new[] { "speed", "attack", "hp", "type1", "type2", "is_legendary" },
                     SortableFields = new[] { "name", "speed" },
