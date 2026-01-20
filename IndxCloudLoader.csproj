@@ -7,10 +7,10 @@
     <Nullable>disable</Nullable>
 
     <!-- Version Information -->
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
-    <InformationalVersion>1.1.0 - Compatible with IndxCloudApi 1.0 and IndxSearchLib 4.1.2</InformationalVersion>
+    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
+    <InformationalVersion>1.1.1 - Compatible with IndxCloudApi 1.0.1 and IndxSearchLib 4.1.2</InformationalVersion>
 
     <!-- Project Metadata -->
     <Authors>Indx</Authors>

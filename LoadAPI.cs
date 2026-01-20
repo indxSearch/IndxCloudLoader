@@ -76,10 +76,9 @@ namespace IndxCloudLoader
             return boostProxy;
         }
         
-        private static async Task<bool> CreateOrOpenDataSet(string route, string dataSetName, int configuration, HttpClient client)
+        private static async Task<bool> CreateOrOpenDataSet(string route, string dataSetName, HttpClient client)
         {
-            var respons = await client.PutAsJsonAsync<string>(route + "/CreateOrOpen/" + dataSetName + "/"
-                + configuration.ToString(), "");
+            var respons = await client.PutAsJsonAsync<string>(route + "/CreateOrOpen/" + dataSetName, "");
             if (!respons.IsSuccessStatusCode)
                 Console.WriteLine("CreateOrOpenDataSet response error:" + respons.ToString());
             return respons.IsSuccessStatusCode;
@@ -515,7 +514,7 @@ namespace IndxCloudLoader
             ConsoleHelper.WriteInfo("Creating or opening dataset...");
             try
             {
-                var createSuccess = await CreateOrOpenDataSet(SearchControllerRoute, config.Name, 400, client);
+                var createSuccess = await CreateOrOpenDataSet(SearchControllerRoute, config.Name, client);
                 if (!createSuccess)
                 {
                     ConsoleHelper.WriteError("Failed to create or open dataset.");
