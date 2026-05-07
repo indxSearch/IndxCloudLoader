@@ -19,6 +19,15 @@ namespace IndxCloudLoader
         #endregion Public Classes
 
         #region Internal Methods
+
+        internal static async Task<bool> ChangePassword(HttpClient client, string currentPassword, string newPassword)
+        {
+            var request = new { currentPassword, newPassword };
+            var jsonContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("api/changePassword", jsonContent);
+            return response.IsSuccessStatusCode;
+        }
+
         internal static void SetBearerToken(HttpClient client, string bearerToken)
         {
             client.BaseAddress = new Uri(uri);

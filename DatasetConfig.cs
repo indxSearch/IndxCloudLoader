@@ -1,9 +1,11 @@
-using Indx.Api;
-
 namespace IndxCloudLoader
 {
     internal class DatasetConfig
     {
+        private const int WeightHigh = 0;
+        private const int WeightMed = 1;
+        private const int WeightLow = 2;
+
         public string Name { get; set; }
         public string FilePath { get; set; }
         public (string Name, int Weight)[] SearchableFields { get; set; }
@@ -23,10 +25,10 @@ namespace IndxCloudLoader
                     FilePath = "data/tmdb_top10k.json",
                     SearchableFields = new[]
                     {
-                        ("title", (int)Weight.High),
-                        ("original_title", (int)Weight.Med),
-                        ("description", (int)Weight.Med),
-                        ("actors", (int)Weight.Low)
+                        ("title", WeightHigh),
+                        ("original_title", WeightMed),
+                        ("description", WeightMed),
+                        ("actors", WeightLow)
                     },
                     WordIndexingFields = new[] { "title" },
                     FilterableFields = new[] { "release_year", "vote_average", "vote_count_tier", "genres", "decade", "actors", "language" },
@@ -40,9 +42,9 @@ namespace IndxCloudLoader
                     FilePath = "data/pokedex.json",
                     SearchableFields = new[]
                     {
-                        ("name", (int)Weight.High),
-                        ("type1", (int)Weight.Med),
-                        ("type2", (int)Weight.Low)
+                        ("name", WeightHigh),
+                        ("type1", WeightMed),
+                        ("type2", WeightLow)
                     },
                     WordIndexingFields = new[] { "name", "type1", "type2" },
                     FilterableFields = new[] { "speed", "attack", "hp", "type1", "type2", "is_legendary" },

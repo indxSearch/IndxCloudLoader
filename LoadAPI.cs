@@ -33,17 +33,6 @@ namespace IndxCloudLoader
 
 
 
-        private static async Task<bool> ClearFields(string dataSetName, string[] fields, HttpClient client)
-        {
-            var options = new JsonSerializerOptions
-            {
-                IncludeFields = true,
-            };
-
-            var res = await client.PutAsJsonAsync(SearchControllerRoute + "/ClearFieldSettings/" + dataSetName, fields, options);
-            return res.IsSuccessStatusCode;
-        }
-
         private static async Task<FilterProxy> CombineFilters(string dataSetName, CombinedFilterProxy combinedFilter, HttpClient client)
         {
             var respons = await client.PutAsJsonAsync<CombinedFilterProxy>(SearchControllerRoute + "/CombineFilters/" + dataSetName, combinedFilter);
@@ -320,7 +309,7 @@ namespace IndxCloudLoader
         private static async Task<string[]> GetUserDataSets(HttpClient client)
         {
             string[] sets = null;
-            var respons = await client.GetAsync(SearchControllerRoute + "/GetUserDataSets");
+            var respons = await client.GetAsync(SearchControllerRoute + "/GetUserDatasets");
             if (respons.IsSuccessStatusCode)
             {
                 var dataAsString = await respons.Content.ReadAsStringAsync();
@@ -457,6 +446,150 @@ namespace IndxCloudLoader
             };
 
             var res = await client.PutAsJsonAsync(SearchControllerRoute + "/SetWordIndexingFields/" + dataSetName, fields, options);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> SetBM25FFields(string dataSetName, BM25FFieldProxy[] fields, HttpClient client)
+        {
+            var res = await client.PutAsJsonAsync(SearchControllerRoute + "/SetBM25FFields/" + dataSetName, fields);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> SetEmbeddableFields(string dataSetName, string[] fields, HttpClient client)
+        {
+            var res = await client.PutAsJsonAsync(SearchControllerRoute + "/SetEmbeddableFields/" + dataSetName, fields);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<EmbeddingResultEntry[]> VectorSearch(string dataSetName, VectorQueryProxy query, HttpClient client)
+        {
+            var response = await client.PostAsJsonAsync(SearchControllerRoute + "/VectorSearch/" + dataSetName, query);
+            if (response.IsSuccessStatusCode)
+            {
+                var dataAsString = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<EmbeddingResultEntry[]>(dataAsString, options);
+            }
+            return null;
+        }
+
+        private static async Task<EmbeddingResultEntry[]> HybridSearch(string dataSetName, HybridQueryProxy query, HttpClient client)
+        {
+            var response = await client.PostAsJsonAsync(SearchControllerRoute + "/HybridSearch/" + dataSetName, query);
+            if (response.IsSuccessStatusCode)
+            {
+                var dataAsString = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<EmbeddingResultEntry[]>(dataAsString, options);
+            }
+            return null;
+        }
+
+        private static async Task<bool> InsertDocument(string dataSetName, string documentKey, string json, HttpClient client)
+        {
+            var res = await client.PostAsync(SearchControllerRoute + "/" + dataSetName + "/insert/" + documentKey,
+                new StringContent(json, Encoding.UTF8, "application/json"));
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> InsertDocuments(string dataSetName, string[] jsonRecords, HttpClient client)
+        {
+            var res = await client.PostAsJsonAsync(SearchControllerRoute + "/" + dataSetName + "/insert", jsonRecords);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> UpdateDocument(string dataSetName, string documentKey, string json, HttpClient client)
+        {
+            var res = await client.PutAsync(SearchControllerRoute + "/" + dataSetName + "/update/" + documentKey,
+                new StringContent(json, Encoding.UTF8, "application/json"));
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> UpdateDocuments(string dataSetName, string[] jsonRecords, HttpClient client)
+        {
+            var res = await client.PutAsJsonAsync(SearchControllerRoute + "/" + dataSetName + "/update", jsonRecords);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> UpdateField(string dataSetName, long documentKey, UpdateFieldProxy update, HttpClient client)
+        {
+            var res = await client.PutAsJsonAsync(SearchControllerRoute + "/" + dataSetName + "/field/" + documentKey, update);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> DeleteDocuments(string dataSetName, long[] documentKeys, HttpClient client)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, SearchControllerRoute + "/" + dataSetName)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(documentKeys), Encoding.UTF8, "application/json")
+            };
+            var res = await client.SendAsync(request);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> DeleteRecordsInFilter(string dataSetName, FilterProxy filter, HttpClient client)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, SearchControllerRoute + "/DeleteRecordsInFilter/" + dataSetName)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(filter), Encoding.UTF8, "application/json")
+            };
+            var res = await client.SendAsync(request);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<int> UpdateFieldInFilter(string dataSetName, FilterFieldUpdateProxy update, HttpClient client)
+        {
+            var response = await client.PutAsJsonAsync(SearchControllerRoute + "/UpdateFieldInFilter/" + dataSetName, update);
+            if (response.IsSuccessStatusCode)
+            {
+                var dataAsString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<int>(dataAsString);
+            }
+            return 0;
+        }
+
+        private static async Task<bool> DeleteFilter(string dataSetName, FilterProxy filter, HttpClient client)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, SearchControllerRoute + "/DeleteFilter/" + dataSetName)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(filter), Encoding.UTF8, "application/json")
+            };
+            var res = await client.SendAsync(request);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> DeleteAllFilters(string dataSetName, HttpClient client)
+        {
+            var res = await client.DeleteAsync(SearchControllerRoute + "/DeleteAllFilters/" + dataSetName);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> LoadAllFilters(string dataSetName, HttpClient client)
+        {
+            var res = await client.PostAsync(SearchControllerRoute + "/LoadAllFilters/" + dataSetName, null);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<int> GetNumberOfFilters(string dataSetName, HttpClient client)
+        {
+            var response = await client.GetAsync(SearchControllerRoute + "/GetNumberOfFilters/" + dataSetName);
+            if (response.IsSuccessStatusCode)
+            {
+                var dataAsString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<int>(dataAsString);
+            }
+            return 0;
+        }
+
+        private static async Task<bool> Hibernate(string dataSetName, HttpClient client)
+        {
+            var res = await client.PutAsync(SearchControllerRoute + "/Hibernate/" + dataSetName, null);
+            return res.IsSuccessStatusCode;
+        }
+
+        private static async Task<bool> WakeUp(string dataSetName, HttpClient client)
+        {
+            var res = await client.PutAsync(SearchControllerRoute + "/WakeUp/" + dataSetName, null);
             return res.IsSuccessStatusCode;
         }
 

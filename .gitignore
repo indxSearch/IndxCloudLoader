@@ -1,3 +1,6 @@
+# Local DLL references (alpha/pre-release, not for source control)
+Indx.dll
+
 # Environment files
 .env.local
 .env
