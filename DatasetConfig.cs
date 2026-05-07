@@ -2,13 +2,14 @@ namespace IndxCloudLoader
 {
     internal class DatasetConfig
     {
-        private const int WeightHigh = 0;
-        private const int WeightMed = 1;
-        private const int WeightLow = 2;
+        private const float WeightHigh = 1.5f;
+        private const float WeightMed = 1.25f;
+        private const float WeightLow = 1.0f;
 
         public string Name { get; set; }
         public string FilePath { get; set; }
-        public (string Name, int Weight)[] SearchableFields { get; set; }
+        public int Configuration { get; set; }
+        public (string Name, float Weight)[] SearchableFields { get; set; }
         public string[] WordIndexingFields { get; set; }
         public string[] FilterableFields { get; set; }
         public string[] FacetableFields { get; set; }
@@ -23,6 +24,7 @@ namespace IndxCloudLoader
                 {
                     Name = "tmdb",
                     FilePath = "data/tmdb_top10k.json",
+                    Configuration = 400,
                     SearchableFields = new[]
                     {
                         ("title", WeightHigh),
@@ -40,13 +42,14 @@ namespace IndxCloudLoader
                 {
                     Name = "pokedex",
                     FilePath = "data/pokedex.json",
+                    Configuration = 400,
                     SearchableFields = new[]
                     {
                         ("name", WeightHigh),
                         ("type1", WeightMed),
                         ("type2", WeightLow)
                     },
-                    WordIndexingFields = new[] { "name", "type1", "type2" },
+                    WordIndexingFields = new[] { "name" },
                     FilterableFields = new[] { "speed", "attack", "hp", "type1", "type2", "is_legendary" },
                     FacetableFields = new[] { "speed", "attack", "hp", "type1", "type2", "is_legendary" },
                     SortableFields = new[] { "name", "speed" },

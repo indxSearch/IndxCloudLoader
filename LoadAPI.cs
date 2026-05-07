@@ -65,9 +65,9 @@ namespace IndxCloudLoader
             return boostProxy;
         }
         
-        private static async Task<bool> CreateOrOpenDataSet(string route, string dataSetName, HttpClient client)
+        private static async Task<bool> CreateOrOpenDataSet(string route, string dataSetName, int configuration, HttpClient client)
         {
-            var respons = await client.PutAsJsonAsync<string>(route + "/CreateOrOpen/" + dataSetName, "");
+            var respons = await client.PutAsJsonAsync<string>(route + "/CreateOrOpen/" + dataSetName + "/" + configuration.ToString(), "");
             if (!respons.IsSuccessStatusCode)
                 Console.WriteLine("CreateOrOpenDataSet response error:" + respons.ToString());
             return respons.IsSuccessStatusCode;
@@ -416,7 +416,7 @@ namespace IndxCloudLoader
             return res.IsSuccessStatusCode;
         }
 
-        private static async Task<bool> SetSearchableFields(string dataSetName, (string, int)[] fields, HttpClient client)
+        private static async Task<bool> SetSearchableFields(string dataSetName, (string, float)[] fields, HttpClient client)
         {
             var options = new JsonSerializerOptions
             {
@@ -647,7 +647,7 @@ namespace IndxCloudLoader
             ConsoleHelper.WriteInfo("Creating or opening dataset...");
             try
             {
-                var createSuccess = await CreateOrOpenDataSet(SearchControllerRoute, config.Name, client);
+                var createSuccess = await CreateOrOpenDataSet(SearchControllerRoute, config.Name, config.Configuration, client);
                 if (!createSuccess)
                 {
                     ConsoleHelper.WriteError("Failed to create or open dataset.");
